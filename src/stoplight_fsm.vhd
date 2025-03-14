@@ -70,23 +70,76 @@ entity stoplight_fsm is
 end stoplight_fsm;
 
 architecture stoplight_fsm_arch of stoplight_fsm is 
+    --    00 = RED
+    --    01 = GREEN
+    --    10 = YELLOW
 	
 	-- create register signals with default state yellow (10)
+	--current/default:
+	signal f_state : std_logic_vector(1 downto 0) := "10";
+	--next:
+	signal c_next  : std_logic_vector(1 downto 0);
   
 begin
 	-- CONCURRENT STATEMENTS ----------------------------
 	-- Next state logic
 	
+-- We cycle:
+    --    GREEN → YELLOW → RED → GREEN
+    --
+    -- If i_C = '1' while GREEN, we move to YELLOW. Otherwise, we stay GREEN.
+    -- (Change this logic if your assignment says differently.)
+    ----------------------------------------------------------------------------
+    process(f_state, i_C)
+    begin
+         case f_state is
+
+            when "00" =>  --R
+                if i_C = '1' then --red, then car
+                    c_next <= "01";  --turn green
+                else
+                    c_next <= "00"; --stay red
+                end if;
+
+            when "01" =>  --G
+                if i_C = '1' then --green, then car
+                    c_next <= "01"; --stay green
+                else
+                    c_next <= "10"; --turn yellow
+                end if;
+
+            when "10" =>  --Y
+                c_next <= "00"; --automatically go to yellow
+
+            when others =>
+                -- if weird shit happens, then just go yellow
+                c_next <= "10";
+        end case;
+    end process;
+
+	
 	
 	-- Output logic
+	
+	-- lights are driven by looking at current state.
+    -- Only one light ON @ each state
+    ----------------------------------------------------------------------------
+    o_R <= '1' when f_state = "00" else '0';   -- Red
+    o_G <= '1' when f_state = "01" else '0';   -- Green
+    o_Y <= '1' when f_state = "10" else '0';   -- Yellow
 	
 	-------------------------------------------------------	
 	
 	-- PROCESSES ----------------------------------------	
 	-- state memory w/ asynchronous reset ---------------
-	register_proc : process (  )
+	register_proc : process (i_clk, i_reset)
 	begin
 			--Reset state is yellow
+	    if i_reset = '1' then
+            f_state <= "10";  -- YELLOW by default on reset
+        elsif rising_edge(i_clk) then
+            f_state <= c_next;
+        end if;
 
 
 	end process register_proc;
