@@ -98,6 +98,14 @@ begin
 	-- PORT MAPS ----------------------------------------
 	--Port map stoplight here based on the design provided
 	
+	   stoplight: stoplight_fsm port map (
+          i_C => sw(0),
+          i_reset => btnC,
+          i_clk => w_clk,
+          o_R => JA(0),
+          o_Y => JA(1),
+          o_G => JA(2)
+        );
 
 
 --Complete the clock_divider portmap below based on the design provided	
